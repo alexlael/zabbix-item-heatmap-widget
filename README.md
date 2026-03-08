@@ -2,28 +2,28 @@
 
 Heatmap semanal para itens numéricos do Zabbix com visualização por **dia da semana × hora**.
 
-Este módulo foi criado para permitir visualizar **padrões de ocorrência de eventos ao longo do tempo**, especialmente útil para análise de **logs de erro de containers**.
+Este módulo foi criado para permitir visualizar padrões de ocorrência de eventos ao longo do tempo, especialmente útil para análise de logs de erro de containers.
 
 ---
 
 # Objetivo do projeto
 
-O objetivo deste widget é transformar eventos recorrentes em um **mapa visual de densidade ao longo da semana**.
+O objetivo deste widget é transformar eventos recorrentes em um mapa visual de densidade ao longo da semana.
 
 Ele foi desenvolvido principalmente para o seguinte cenário:
 
-Monitorar **erros de containers Docker** dentro do Zabbix e identificar:
+Monitorar erros de containers Docker dentro do Zabbix e identificar:
 
 - quais horários concentram mais erros
 - quais dias da semana são mais problemáticos
 - padrões recorrentes de falhas
 
-O resultado é um **heatmap semelhante a ferramentas de observabilidade modernas**.
+O resultado é um heatmap semelhante a ferramentas de observabilidade modernas.
 
-Exemplo:
+## Exemplo
 
 | Dia/Hora | Volume de erros |
-|--------|--------|
+|---|---|
 | Segunda 03:00 | baixo |
 | Quinta 14:00 | médio |
 | Sábado 16:00 | alto |
@@ -38,15 +38,15 @@ Exemplo:
 
 # Como o widget funciona
 
-O widget **não lê logs diretamente**.
+O widget não lê logs diretamente.
 
-Ele trabalha com **itens numéricos do Zabbix**.
+Ele trabalha com itens numéricos do Zabbix.
 
 Portanto é necessário transformar logs em valores numéricos.
 
 Fluxo de funcionamento:
 
-```
+```text
 Logs do container
         ↓
 Item de log no Zabbix
@@ -58,7 +58,7 @@ Item Heatmap Widget
 
 O widget então agrupa os dados em:
 
-```
+```text
 Dia da semana × Hora do dia
 ```
 
@@ -68,8 +68,8 @@ gerando a matriz do heatmap.
 
 # Funcionalidades
 
-- heatmap semanal por **hora**
-- visualização por **dia da semana**
+- heatmap semanal por hora
+- visualização por dia da semana
 - navegação entre semanas
 - agregação de dados
 - layout em cards
@@ -81,13 +81,13 @@ gerando a matriz do heatmap.
 
 Cada célula representa:
 
-```
+```text
 1 hora específica de um dia específico
 ```
 
 Exemplo:
 
-```
+```text
 Segunda 14h
 Terça 03h
 Sábado 18h
@@ -116,31 +116,27 @@ Exemplo usando Docker:
 docker cp zabbix-item-heatmap-widget zabbix-web:/usr/share/zabbix/modules/
 ```
 
----
-
 ## 2 — Escanear módulos
 
 No Zabbix:
 
-```
+```text
 Administration → Modules
 ```
 
 Clique em:
 
-```
+```text
 Scan directory
 ```
 
 O módulo **Item Heatmap** aparecerá na lista.
 
----
-
 ## 3 — Habilitar o módulo
 
 Ainda em:
 
-```
+```text
 Administration → Modules
 ```
 
@@ -157,10 +153,12 @@ Clique em **Enable**.
 
 Configure:
 
-```
+```text
 Item → item numérico
 Aggregation → modo de agregação
 ```
+
+![Widget Config](docs/images/widget-config.png)
 
 ---
 
@@ -168,7 +166,7 @@ Aggregation → modo de agregação
 
 Este é o passo mais importante para usar o heatmap.
 
-O Zabbix precisa de **um valor numérico**.
+O Zabbix precisa de um valor numérico.
 
 Então precisamos transformar logs em contadores.
 
@@ -180,7 +178,7 @@ Primeiro você precisa de um item que receba os logs do container.
 
 Exemplo:
 
-```
+```text
 docker logs
 container logs
 agent log item
@@ -188,7 +186,7 @@ agent log item
 
 Print sugerido:
 
-```
+```text
 docs/images/item-log-source.png
 ```
 
@@ -198,47 +196,45 @@ Tire o print mostrando:
 - key
 - tipo do item
 
+![Item Log Source](docs/images/item-log-source.png)
+
 ---
 
 # Passo 2 — Criar item dependente
 
 Crie um novo item:
 
-```
+```text
 Type: Dependent item
 ```
 
 Configuração exemplo:
 
-Name
+**Name**
 
-```
+```text
 Qtd ERROR - container
 ```
 
-Key
+**Key**
 
-```
+```text
 docker.container.errors.count
 ```
 
-Type of information
+**Type of information**
 
-```
+```text
 Numeric (unsigned)
 ```
 
-Master item
+**Master item**
 
-```
+```text
 item de logs do container
 ```
 
-Print sugerido:
-
-```
-docs/images/dependent-item-config.png
-```
+![Dependent Item Config](docs/images/dependent-item-config.png)
 
 ---
 
@@ -246,7 +242,7 @@ docs/images/dependent-item-config.png
 
 Na aba **Preprocessing** adicione um passo do tipo:
 
-```
+```text
 JavaScript
 ```
 
@@ -259,17 +255,13 @@ return matches ? matches.length : 0;
 
 Este script conta quantas vezes a palavra:
 
-```
+```text
 ERROR
 ```
 
 aparece nos logs.
 
-Print sugerido:
-
-```
-docs/images/preprocessing-script.png
-```
+![Preprocessing Script](docs/images/preprocessing-script.png)
 
 ---
 
@@ -277,24 +269,20 @@ docs/images/preprocessing-script.png
 
 Depois de criado, verifique:
 
-```
+```text
 Monitoring → Latest data
 ```
 
 O item deve retornar valores como:
 
-```
+```text
 0
 2
 15
 37
 ```
 
-Print sugerido:
-
-```
-docs/images/latest-data-values.png
-```
+![Latest Data Values](docs/images/latest-data-values.png)
 
 ---
 
@@ -306,8 +294,8 @@ Exemplo:
 
 ```bash
 for i in {1..30}; do
-docker exec zabbix-log-generator sh -c 'echo "ERROR test $(date)" > /tmp/errpipe'
-sleep 1
+  docker exec zabbix-log-generator sh -c 'echo "ERROR test $(date)" > /tmp/errpipe'
+  sleep 1
 done
 ```
 
@@ -317,11 +305,7 @@ Depois confira:
 docker logs zabbix-log-generator
 ```
 
-Print sugerido:
-
-```
-docs/images/container-error-test.png
-```
+![Container Error Test](docs/images/container-error-test.png)
 
 ---
 
@@ -329,14 +313,14 @@ docs/images/container-error-test.png
 
 Cada célula representa:
 
-```
+```text
 dia da semana + hora
 ```
 
 As cores indicam intensidade.
 
 | Cor | Significado |
-|----|----|
+|---|---|
 | verde | baixo volume |
 | amarelo | médio |
 | laranja | alto |
@@ -348,22 +332,18 @@ As cores indicam intensidade.
 
 O widget carrega várias semanas e permite navegar usando:
 
-```
+```text
 ← semana anterior
 → semana seguinte
 ```
 
-Print sugerido:
-
-```
-docs/images/heatmap-week-navigation.png
-```
+![Heatmap Week Navigation](docs/images/heatmap-week-navigation.png)
 
 ---
 
 # Estrutura do projeto
 
-```
+```text
 zabbix-item-heatmap-widget
 │
 ├── actions
