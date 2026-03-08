@@ -20,11 +20,14 @@ class WidgetView extends CControllerDashboardWidgetView {
         $provider = new HeatmapDataProvider();
         $itemids = $this->getItemIds();
         $aggregation = $this->getAggregation();
+        $display_mode = $provider->normalizeDisplayMode($this->getDisplayMode());
+        $period_weeks = $provider->normalizePeriodWeeks($this->getPeriodWeeks());
+        $slot_seconds = $provider->normalizeSlotSeconds($this->getSlotSeconds());
         $hour_format = $this->getHourFormat();
         $current_week_start = $provider->getCurrentWeekStart();
-        $oldest_week_start = $provider->getOldestWeekStart($current_week_start);
+        $oldest_week_start = $provider->getOldestWeekStart($current_week_start, $period_weeks);
         $requested_week_start = $this->getRequestedWeekStart($provider, $current_week_start, $oldest_week_start);
-        $week = $provider->buildWeeklyMatrix($itemids, $aggregation, $requested_week_start);
+        $week = $provider->buildWeeklyMatrix($itemids, $aggregation, $requested_week_start, $slot_seconds);
         $widget_name = $this->getWidgetName();
         $display_title = $this->getDisplayTitle($widget_name);
         $legend_text = $this->getLegendText();
@@ -33,6 +36,9 @@ class WidgetView extends CControllerDashboardWidgetView {
             'name' => $widget_name,
             'itemids' => $itemids,
             'aggregation' => $aggregation,
+            'display_mode' => $display_mode,
+            'period_weeks' => $period_weeks,
+            'slot_seconds' => $slot_seconds,
             'hour_format' => $hour_format,
             'week' => $week,
             'current_week_start_ts' => $current_week_start,
@@ -69,6 +75,18 @@ class WidgetView extends CControllerDashboardWidgetView {
 
     private function getAggregation(): int {
         return (int) ($this->fields_values['aggregation'] ?? HeatmapDataProvider::AGGREGATION_SUM);
+    }
+
+    private function getDisplayMode(): int {
+        return (int) ($this->fields_values['display_mode'] ?? HeatmapDataProvider::DISPLAY_MODE_CONSOLIDATED);
+    }
+
+    private function getPeriodWeeks(): int {
+        return (int) ($this->fields_values['period_weeks'] ?? HeatmapDataProvider::PERIOD_12_WEEKS);
+    }
+
+    private function getSlotSeconds(): int {
+        return (int) ($this->fields_values['slot_seconds'] ?? HeatmapDataProvider::SLOT_1_HOUR);
     }
 
     private function getHourFormat(): int {

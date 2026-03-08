@@ -14,6 +14,15 @@
         new CWidgetFieldSelectView($data['fields']['aggregation'])
     )
     ->addField(
+        new CWidgetFieldSelectView($data['fields']['display_mode'])
+    )
+    ->addField(
+        new CWidgetFieldSelectView($data['fields']['period_weeks'])
+    )
+    ->addField(
+        new CWidgetFieldSelectView($data['fields']['slot_seconds'])
+    )
+    ->addField(
         new CWidgetFieldSelectView($data['fields']['hour_format'])
     )
     ->addField(

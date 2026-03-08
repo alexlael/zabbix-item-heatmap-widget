@@ -1,123 +1,178 @@
-﻿# Item Heatmap Widget for Zabbix
+# Item Heatmap Widget for Zabbix
 
-Módulo de dashboard para Zabbix que transforma itens numéricos em um **heatmap semanal por dia da semana x hora**, facilitando a leitura de recorrência, concentração e comportamento operacional ao longo da semana.
+Widget custom de dashboard para Zabbix que transforma historico numerico em um heatmap semanal por `dia da semana x faixa horaria`.
 
-O widget foi pensado para cenários em que olhar apenas para gráfico ou tabela não responde rapidamente perguntas como:
+O objetivo do modulo e responder uma pergunta que graficos tradicionais nem sempre deixam clara:
 
-- Em quais horários os erros se concentram?
-- Existe recorrência por dia da semana?
-- O comportamento piora em janelas específicas?
-- Vários itens apresentam carga combinada em determinados períodos?
+**em que momento da semana um comportamento se concentra?**
+
+Isso funciona muito bem para contadores derivados de logs, retries, exceptions, timeouts, filas, jobs recorrentes e qualquer metrica numerica que tenha padrao operacional ao longo dos dias.
 
 ![Heatmap Example](docs/images/heatmap-example.png)
 
-A captura acima mostra o layout final do widget; os valores exibidos dependem do historico real dos itens selecionados na semana consultada.
-
-## Visão geral
+## Visao geral
 
 | Item | Valor |
 | --- | --- |
 | Tipo | Widget custom para dashboard do Zabbix |
 | Nome exibido | `Item Heatmap` |
-| Versão do módulo | `1.0.0` |
-| Granularidade | 1 hora |
-| Faixa navegável | semana atual + 11 semanas anteriores |
-| Atualização automática | `60s` |
-| Agregações | `Sum`, `Average`, `Maximum`, `Count non-zero` |
-| Seleção de itens | um ou mais itens agregados no mesmo mapa |
+| Atualizacao | `60s` |
+| Janela navegavel | `4`, `8`, `12`, `24` ou `52` semanas |
+| Granularidade | `30 min`, `1h`, `2h`, `4h`, `6h` ou `12h` |
+| Formato de hora | `12h AM/PM`, `12h sem AM/PM` ou `24h` |
+| Agregacoes | `Sum`, `Average`, `Maximum`, `Count non-zero` |
+| Itens | um ou mais itens numericos |
+| Exibicao | `Consolidated` ou `Compare items` |
 
-## O que o widget resolve
+## O que o widget entrega
 
-O Zabbix já mostra histórico, latest data e gráficos. O papel deste widget é outro: condensar o histórico em uma matriz **7 dias x 24 horas** para mostrar rapidamente onde os valores se concentram.
+- heatmap semanal com foco em recorrencia operacional
+- suporte a multiplos itens no mesmo widget
+- modo consolidado ou comparativo por item
+- tooltip detalhado por bucket
+- drill-down por celula com links para telas nativas do Zabbix
+- navegacao semana a semana com lazy load
+- cache simples por semana para reduzir recalculo
+- adaptacao visual ao tema atual do Zabbix
+- layout com celulas quadradas para leitura mais equilibrada
 
-Isso é especialmente útil para:
+## Galeria
 
-- logs de erro transformados em contadores
-- retries, exceções e timeouts recorrentes
-- bursts de filas ou jobs agendados
-- correlação visual de múltiplos itens numéricos em uma mesma grade horária
-- análise operacional de comportamento semanal
+### Configuracao do widget
+
+Os campos abaixo permitem escolher itens, agregacao, modo de exibicao, granularidade, formato de hora, titulo interno e legenda opcional.
+
+![Widget Config](docs/images/widget-config.png)
+
+### Navegacao semanal
+
+O widget carrega apenas a semana atual na primeira renderizacao. As setas buscam semanas adicionais sob demanda.
+
+![Heatmap Week Navigation](docs/images/heatmap-week-navigation.png)
+
+### Tooltip expandido
+
+Ao passar o mouse em uma celula, o widget mostra a semana, o dia, a faixa horaria, o valor agregado, problemas relacionados, latest value e contexto do item.
+
+![Heatmap Tooltip](docs/images/heatmap-tooltip.png)
+
+### Drill-down por celula
+
+Ao clicar em uma celula com valor ou problema associado, o widget abre um menu com links para `Exact graph`, `History values`, `Latest data` e `Related problems` no intervalo exato do bucket.
+
+![Heatmap Drill-down](docs/images/heatmap-drilldown.png)
 
 ## Como o widget funciona
 
-O módulo **não lê logs diretamente**. Ele trabalha sobre itens históricos do Zabbix e monta um heatmap agregado por semana.
+O modulo trabalha sobre itens numericos do Zabbix. Ele nao le logs diretamente.
 
-Fluxo recomendado:
+Fluxo tipico:
 
 ```text
 Fonte de dados
     -> item no Zabbix
-    -> item numérico derivado
+    -> item numerico derivado
     -> Item Heatmap Widget
 ```
 
-Exemplo clássico com logs:
+Exemplo com logs:
 
 ```text
 Log do container
     -> item mestre de log
-    -> item dependente numérico
+    -> item dependente numerico
     -> heatmap no dashboard
 ```
 
-## Múltiplos itens
+## Modos de agregacao
 
-O widget aceita **múltiplos itemids** e agrega todos no mesmo mapa.
+O widget aceita multiplos `itemids` e aplica a agregacao escolhida em cada bucket.
 
-A regra de agregação entre itens e amostras dentro do bucket é:
-
-| Agregação | Regra aplicada no bucket |
+| Agregacao | Regra aplicada no bucket |
 | --- | --- |
 | `Sum` | soma de todos os valores de todos os itens |
-| `Average` | média de todos os valores de todos os itens |
+| `Average` | media de todos os valores de todos os itens |
 | `Maximum` | maior valor entre todos os itens |
 | `Count non-zero` | quantidade de amostras com valor maior que zero |
 
-Na prática, cada célula representa o resultado consolidado do conjunto de itens selecionados para aquele **dia + hora**.
+## Modos de exibicao
 
-## Interações do widget
+### Consolidated
 
-O heatmap agora possui comportamento interativo para facilitar análise no dashboard.
+Todos os itens selecionados sao combinados em uma unica grade. Esse modo destaca volume total, picos agregados e janelas mais quentes da semana.
 
-### Tooltip no hover
+### Compare items
 
-Ao passar o mouse sobre uma célula, o widget mostra um tooltip leve com:
+Cada item passa a ter seu proprio painel dentro do widget. Esse modo e o mais util quando voce quer comparar containers, filas, servicos ou categorias de erro sem misturar tudo na mesma celula.
 
-- label da semana
+Quando ha muitos itens, o widget usa scroll vertical apenas na area interna do heatmap para preservar legibilidade.
+
+## Interacoes
+
+### Tooltip
+
+O tooltip mostra:
+
+- semana exibida
 - dia da semana
-- hora
+- faixa horaria exata do bucket
 - valor agregado
-- quantidade de itens agregados quando houver mais de um item selecionado
+- quantidade de problemas associados
+- latest value e idade da ultima amostra
+- quebra por item quando aplicavel
 
-### Clique na célula
+### Clique na celula
 
-Ao clicar em uma célula com valor maior que zero, o widget abre uma página útil do Zabbix relacionada ao **item principal selecionado**.
+O clique funciona apenas em buckets com valor ou problema associado. A partir dele, o usuario pode abrir rapidamente as telas nativas do Zabbix relacionadas ao mesmo intervalo.
 
-Implementação atual:
+### Navegacao por semana
 
-- células com valor `0` não fazem nada
-- células com valor `> 0` abrem o gráfico do primeiro item selecionado
-- a lógica de clique ficou isolada no frontend para facilitar troca futura por drill-down mais específico
+- `prev`: busca a semana anterior
+- `next`: volta em direcao a semana atual
 
-## Performance e arquitetura de dados
+O frontend mantem em memoria as semanas que ja foram abertas durante a vida do widget, evitando requests repetidos para a mesma janela.
 
-O widget foi refatorado para não pré-carregar várias semanas de uma vez.
+## Layout e experiencia visual
+
+- as celulas usam geometria quadrada para manter o mesmo respiro horizontal e vertical
+- os valores ficam centralizados no bucket
+- a paleta respeita o tema atual do Zabbix para bordas, texto e celulas vazias
+- o widget nao impõe um fundo proprio, usando o fundo padrao do painel do Zabbix
+- a escala `Low -> High` permanece consistente para leitura operacional
+
+## Configuracao do widget
+
+Campos principais:
+
+- `Items`: um ou mais itens numericos
+- `Aggregation`: regra usada por bucket
+- `Display mode`: `Consolidated` ou `Compare items`
+- `Period window`: `4`, `8`, `12`, `24` ou `52` semanas
+- `Granularity`: `30 min`, `1h`, `2h`, `4h`, `6h` ou `12h`
+- `Hour format`: `12-hour (AM/PM)`, `12-hour (no AM/PM)` ou `24-hour`
+- `Show display title`: mostra um titulo interno no corpo do widget
+- `Display title`: texto livre para nomear o contexto observado
+- `Show legend`: mostra ou oculta a linha de contexto
+- `Legend / context`: descricao livre para containers, servicos ou escopo do widget
+
+## Performance e arquitetura
 
 ### Lazy load por semana
 
-- a primeira renderização carrega apenas a semana atual
-- semanas anteriores são buscadas sob demanda ao clicar nas setas de navegacao
-- semanas já carregadas ficam em memória no frontend durante a vida do widget
+- a primeira renderizacao carrega apenas a semana atual
+- as demais semanas sao carregadas sob demanda
+- o backend aceita `week_start_ts` para responder somente a semana solicitada
 
 ### Cache
 
-O backend usa cache simples por arquivo temporário para evitar recalcular a mesma semana repetidamente.
+O backend usa cache simples por arquivo temporario para reduzir recalculo repetido.
 
-Chave do cache:
+Chave atual:
 
 - `itemids`
 - `aggregation`
 - `week_start_ts`
+- `slot_seconds`
 
 TTL atual:
 
@@ -125,28 +180,19 @@ TTL atual:
 
 ### History vs Trends
 
-A camada de obtenção de dados foi separada para facilitar evolução entre `history` e `trends`.
+O acesso aos dados foi isolado em uma camada dedicada para facilitar evolucao entre `history` e `trends`.
 
 Comportamento atual:
 
-- semanas mais recentes usam `history`
+- buckets recentes usam `history`
 - semanas mais antigas podem usar `trends` para `Sum`, `Average` e `Maximum`
-- `Count non-zero` continua em `history`, porque depende da contagem de amostras positivas
-- se `trends` não estiver adequado para a consulta, o código faz fallback para `history`
+- granularidade abaixo de `1h` continua em `history`
+- `Count non-zero` continua em `history`, porque depende de contagem exata de amostras positivas
+- se `trends` nao for adequado para a consulta, o codigo faz fallback para `history`
 
-## Requisitos e compatibilidade
+## Instalacao
 
-Para usar o widget com previsibilidade:
-
-- frontend do Zabbix com suporte a módulos de widget
-- permissão para copiar o módulo para o diretório de módulos do frontend
-- acesso a `Administration -> Modules` para habilitar o módulo
-- itens numéricos compatíveis com o histórico do Zabbix
-- cenário preferencial com itens `Numeric (unsigned)` ou `Numeric (float)`
-
-## Instalação
-
-### 1. Copie o módulo para o frontend do Zabbix
+### 1. Copie o modulo para o frontend do Zabbix
 
 Exemplo em ambiente Docker:
 
@@ -154,9 +200,9 @@ Exemplo em ambiente Docker:
 docker cp zabbix-item-heatmap-widget zabbix-web:/usr/share/zabbix/modules/
 ```
 
-Em instalações tradicionais, copie a pasta do repositório para o diretório de módulos do frontend do Zabbix.
+Em instalacoes tradicionais, copie a pasta do repositorio para o diretorio de modulos do frontend do Zabbix.
 
-### 2. Faça o scan do diretório de módulos
+### 2. Faca o scan do diretorio de modulos
 
 No Zabbix:
 
@@ -166,94 +212,51 @@ Administration -> Modules
 
 Clique em `Scan directory`.
 
-### 3. Habilite o módulo
+### 3. Habilite o modulo
 
 Na mesma tela, localize `Item Heatmap` e clique em `Enable`.
 
-## Adicionando o widget ao dashboard
+## Adicionando ao dashboard
 
 1. Abra o dashboard desejado.
 2. Clique em `Edit dashboard`.
 3. Clique em `Add widget`.
 4. Selecione `Item Heatmap`.
-5. Escolha um ou mais itens.
-6. Defina a agregação.
-7. Salve o dashboard.
+5. Escolha um ou mais itens numericos.
+6. Defina agregacao, modo de exibicao, janela, granularidade e formato de hora.
+7. Opcionalmente configure titulo interno e legenda.
+8. Salve o dashboard.
 
-Campos principais:
+## Pipeline recomendado para logs
 
-- `Items`: um ou mais itens numéricos a serem consolidados no heatmap
-- `Aggregation`: regra usada para calcular cada célula
-- `Hour format`: permite escolher entre exibicao em `12-hour (AM/PM)`, `12-hour (no AM/PM)` ou `24-hour`
-- `Show display title`: exibe um titulo interno no corpo do widget, independente do cabecalho padrao do dashboard
-- `Display title`: texto do titulo interno; se ficar vazio, o widget usa o `Name` padrao do proprio widget
-- `Show legend`: habilita uma linha adicional para contexto operacional, como lista de containers ou descricao do escopo observado
-- `Legend / context`: texto livre mostrado abaixo do titulo interno quando a legenda estiver habilitada
+Esse e o caso de uso mais comum do modulo.
 
-### Layout e apresentacao visual
+### 1. Crie um item mestre de log
 
-A apresentacao visual atual foi ajustada para ficar mais proxima de um painel de incident heatmap:
+Use um item que capture os logs do container ou servico desejado.
 
-- celulas mais largas e mais altas para melhorar legibilidade em widgets de tamanho medio
-- espacos regulares entre os cards de hora
-- contraste mais forte entre fundo, labels e valores
-- navegacao semanal integrada ao cabecalho do mapa
-- suporte a exibicao de hora em 12h com AM/PM, 12h sem AM/PM ou 24h, conforme preferencia do dashboard
-- paleta visual adaptada ao tema ativo do Zabbix, preservando o fundo padrao do dashboard
-- titulo interno opcional e legenda opcional para contextualizar quais containers ou servicos estao sendo observados
+### 2. Crie um item dependente numerico
 
-![Widget Config](docs/images/widget-config.png)
-
-## Pipeline recomendado para logs de containers
-
-Este é o caso de uso mais comum do módulo.
-
-A ideia é converter texto de log em um contador numérico por coleta. Depois disso, o heatmap passa a mostrar **quando** os erros acontecem com mais frequência.
-
-### 1. Crie o item mestre de log
-
-Crie ou reutilize um item que capture os logs do container.
-
-Exemplos:
-
-- logs de container Docker
-- item de log via agent
-- outra fonte textual já centralizada no Zabbix
-
-![Item Log Source](docs/images/item-log-source.png)
-
-### 2. Crie um item dependente numérico
-
-Use um item dependente para derivar um valor numérico do log bruto.
-
-Exemplo de configuração:
+Exemplo:
 
 - `Type`: `Dependent item`
-- `Name`: `Qtd ERROR - container`
-- `Key`: `docker.container.errors.count`
 - `Type of information`: `Numeric (unsigned)`
 - `Master item`: item de logs do container
 
-![Dependent Item Config](docs/images/dependent-item-config.png)
+### 3. Adicione preprocessing para contar ocorrencias
 
-### 3. Adicione preprocessing para contar eventos
-
-Na aba `Preprocessing`, adicione um passo do tipo `JavaScript` com uma lógica semelhante a esta:
+Exemplo simples para contar `ERROR`:
 
 ```javascript
 var matches = value.match(/ERROR/g);
 return matches ? matches.length : 0;
 ```
 
-Esse exemplo conta quantas vezes a string `ERROR` aparece no payload do log recebido na coleta.
-
-Você pode adaptar o padrão para outros termos, como `WARN`, `timeout`, `exception` ou qualquer assinatura de erro do seu ambiente.
-
-![Preprocessing Script](docs/images/preprocessing-script.png)
+Repita a mesma ideia para `WARNING`, `TIMEOUT`, `EXCEPTION` ou qualquer padrao que faca sentido no seu ambiente.
 
 ### 4. Valide o item derivado
 
-No Zabbix, confira em:
+No Zabbix:
 
 ```text
 Monitoring -> Latest data
@@ -261,59 +264,34 @@ Monitoring -> Latest data
 
 O item derivado deve retornar um valor numerico a cada coleta.
 
-- `0` e normal quando nao ha correspondencias no payload recebido
-- valores maiores que `0` indicam ocorrencias detectadas e agregadas pelo preprocessing
+### 5. Use o item no heatmap
 
-![Latest Data Values](docs/images/latest-data-values.png)
-
-### 5. Use o item no widget
-
-Depois que o item estiver gerando histórico numérico de forma consistente, selecione-o no `Item Heatmap` e escolha a agregação mais adequada.
-
-### 6. Gere carga de teste, se necessário
-
-Se estiver validando o fluxo em laboratório, você pode produzir eventos artificiais para popular o heatmap.
-
-```bash
-for i in {1..30}; do
-  docker exec zabbix-log-generator sh -c 'echo "ERROR test $(date)" > /tmp/errpipe'
-  sleep 1
-done
-```
+Depois que o item estiver gerando historico de forma consistente, selecione-o no widget e escolha a agregacao e o modo de exibicao mais adequados para o seu caso.
 
 ## Como interpretar o heatmap
 
-Cada célula representa:
+Cada celula representa:
 
 ```text
-dia da semana + hora do dia
+dia da semana + bucket horario
 ```
-
-Exemplos:
-
-- `Domingo 03:00`
-- `Terça 14:00`
-- `Sábado 22:00`
 
 Leitura visual:
 
-- tons mais neutros indicam menor intensidade
-- tons mais quentes indicam maior concentração relativa na semana exibida
-- o número dentro da célula mostra o valor agregado daquele bucket
-- o tooltip no hover mostra semana, dia, faixa horaria e valor agregado
-- as setas do cabeçalho permitem navegar entre semanas sob demanda
+- tons neutros indicam menor intensidade
+- tons quentes indicam maior concentracao relativa na semana exibida
+- o numero dentro da celula mostra o valor agregado do bucket
+- o tooltip mostra o contexto detalhado do bucket
+- o clique abre o drill-down para o intervalo exato
+- problemas relacionados destacam buckets com contexto operacional relevante
 
-![Heatmap Week Navigation](docs/images/heatmap-week-navigation.png)
+## Limitacoes atuais
 
-## Limitações atuais
-
-Pontos importantes sobre o comportamento atual:
-
-- o mapa continua consolidando múltiplos itens em uma única grade
-- o clique abre o gráfico do item principal selecionado, não um drill-down específico por bucket
-- a navegação permanece limitada a 12 semanas para preservar a proposta atual do widget
-- `Count non-zero` depende de `history`, porque `trends` não fornece contagem exata de amostras positivas
-- existe limite de consulta no carregamento do histórico, embora o lazy load reduza bastante a pressão da consulta
+- no modo consolidado, links de grafico e historico usam o item principal do widget
+- o menu de drill-down ainda nao faz merge de multiplos itens em uma unica tela nativa do Zabbix
+- `Count non-zero` depende de `history`
+- granularidades menores geram mais buckets e podem exigir widgets mais largos
+- modo comparativo com muitos itens pode exigir scroll vertical para manter legibilidade
 
 ## Estrutura do projeto
 
@@ -341,22 +319,10 @@ zabbix-item-heatmap-widget
 `-- README.md
 ```
 
-## Ideias de evolução
-
-Possíveis próximos passos para o módulo:
-
-- drill-down por célula com período exato do bucket clicado
-- tooltip expandido com quebra por item
-- filtros por período e granularidade configurável
-- suporte visual comparativo entre itens em vez de consolidação única
-- integração mais profunda com eventos e latest data
-
 ## Resumo
 
-O `Item Heatmap` é um widget orientado a observabilidade operacional dentro do Zabbix. A força dele está em transformar histórico numérico em uma leitura visual simples sobre **quando** um comportamento acontece, inclusive quando há mais de um item contribuindo para o mesmo padrão semanal.
+O `Item Heatmap` transforma historico numerico em uma leitura operacional sobre **quando** um comportamento acontece. Com suporte a multiplos itens, comparacao visual, granularidade configuravel, formatos de hora, tooltip detalhado, drill-down por bucket, navegacao semanal e integracao com `Problems` e `Latest data`, o widget cobre melhor recorrencia, investigacao rapida e acompanhamento semanal dentro do proprio dashboard do Zabbix.
 
-Com lazy load por semana, cache leve e interação por hover/clique, o módulo fica mais adequado para uso contínuo em dashboards de operação.
-
-## Licença
+## Licenca
 
 MIT
