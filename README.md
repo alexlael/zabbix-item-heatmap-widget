@@ -11,6 +11,8 @@ O widget foi pensado para cenários em que olhar apenas para gráfico ou tabela 
 
 ![Heatmap Example](docs/images/heatmap-example.png)
 
+A captura acima mostra o layout final do widget; os valores exibidos dependem do historico real dos itens selecionados na semana consultada.
+
 ## Visão geral
 
 | Item | Valor |
@@ -104,7 +106,7 @@ O widget foi refatorado para não pré-carregar várias semanas de uma vez.
 ### Lazy load por semana
 
 - a primeira renderização carrega apenas a semana atual
-- semanas anteriores são buscadas sob demanda ao clicar em `←`
+- semanas anteriores são buscadas sob demanda ao clicar nas setas de navegacao
 - semanas já carregadas ficam em memória no frontend durante a vida do widget
 
 ### Cache
@@ -182,6 +184,23 @@ Campos principais:
 
 - `Items`: um ou mais itens numéricos a serem consolidados no heatmap
 - `Aggregation`: regra usada para calcular cada célula
+- `Hour format`: permite escolher entre exibicao em `12-hour (AM/PM)`, `12-hour (no AM/PM)` ou `24-hour`
+- `Show display title`: exibe um titulo interno no corpo do widget, independente do cabecalho padrao do dashboard
+- `Display title`: texto do titulo interno; se ficar vazio, o widget usa o `Name` padrao do proprio widget
+- `Show legend`: habilita uma linha adicional para contexto operacional, como lista de containers ou descricao do escopo observado
+- `Legend / context`: texto livre mostrado abaixo do titulo interno quando a legenda estiver habilitada
+
+### Layout e apresentacao visual
+
+A apresentacao visual atual foi ajustada para ficar mais proxima de um painel de incident heatmap:
+
+- celulas mais largas e mais altas para melhorar legibilidade em widgets de tamanho medio
+- espacos regulares entre os cards de hora
+- contraste mais forte entre fundo, labels e valores
+- navegacao semanal integrada ao cabecalho do mapa
+- suporte a exibicao de hora em 12h com AM/PM, 12h sem AM/PM ou 24h, conforme preferencia do dashboard
+- paleta visual adaptada ao tema ativo do Zabbix, preservando o fundo padrao do dashboard
+- titulo interno opcional e legenda opcional para contextualizar quais containers ou servicos estao sendo observados
 
 ![Widget Config](docs/images/widget-config.png)
 
@@ -240,14 +259,10 @@ No Zabbix, confira em:
 Monitoring -> Latest data
 ```
 
-O item derivado deve começar a retornar valores como:
+O item derivado deve retornar um valor numerico a cada coleta.
 
-```text
-0
-2
-15
-37
-```
+- `0` e normal quando nao ha correspondencias no payload recebido
+- valores maiores que `0` indicam ocorrencias detectadas e agregadas pelo preprocessing
 
 ![Latest Data Values](docs/images/latest-data-values.png)
 
@@ -266,8 +281,6 @@ for i in {1..30}; do
 done
 ```
 
-![Container Error Test](docs/images/container-error-test.png)
-
 ## Como interpretar o heatmap
 
 Cada célula representa:
@@ -284,9 +297,10 @@ Exemplos:
 
 Leitura visual:
 
-- tons mais frios/escuros indicam menor intensidade
+- tons mais neutros indicam menor intensidade
 - tons mais quentes indicam maior concentração relativa na semana exibida
 - o número dentro da célula mostra o valor agregado daquele bucket
+- o tooltip no hover mostra semana, dia, faixa horaria e valor agregado
 - as setas do cabeçalho permitem navegar entre semanas sob demanda
 
 ![Heatmap Week Navigation](docs/images/heatmap-week-navigation.png)

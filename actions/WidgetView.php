@@ -20,21 +20,30 @@ class WidgetView extends CControllerDashboardWidgetView {
         $provider = new HeatmapDataProvider();
         $itemids = $this->getItemIds();
         $aggregation = $this->getAggregation();
+        $hour_format = $this->getHourFormat();
         $current_week_start = $provider->getCurrentWeekStart();
         $oldest_week_start = $provider->getOldestWeekStart($current_week_start);
         $requested_week_start = $this->getRequestedWeekStart($provider, $current_week_start, $oldest_week_start);
         $week = $provider->buildWeeklyMatrix($itemids, $aggregation, $requested_week_start);
+        $widget_name = $this->getWidgetName();
+        $display_title = $this->getDisplayTitle($widget_name);
+        $legend_text = $this->getLegendText();
 
         $this->setResponse(new CControllerResponseData([
-            'name' => $this->fields_values['name'] ?? 'Item Heatmap',
+            'name' => $widget_name,
             'itemids' => $itemids,
             'aggregation' => $aggregation,
+            'hour_format' => $hour_format,
             'week' => $week,
             'current_week_start_ts' => $current_week_start,
             'oldest_week_start_ts' => $oldest_week_start,
             'primary_itemid' => $itemids[0] ?? null,
             'primary_item_url' => $this->buildPrimaryItemUrl($itemids),
             'selected_item_count' => count($itemids),
+            'display_title' => $display_title,
+            'show_display_title' => $this->shouldShowDisplayTitle($display_title),
+            'legend_text' => $legend_text,
+            'show_legend' => $this->shouldShowLegend($legend_text),
             'user' => [
                 'debug_mode' => $this->getDebugMode()
             ]
@@ -60,6 +69,42 @@ class WidgetView extends CControllerDashboardWidgetView {
 
     private function getAggregation(): int {
         return (int) ($this->fields_values['aggregation'] ?? HeatmapDataProvider::AGGREGATION_SUM);
+    }
+
+    private function getHourFormat(): int {
+        $hour_format = (int) ($this->fields_values['hour_format'] ?? 12);
+
+        if ($hour_format === 24) {
+            return 24;
+        }
+
+        if ($hour_format === 120) {
+            return 120;
+        }
+
+        return 12;
+    }
+
+    private function getWidgetName(): string {
+        return trim((string) ($this->fields_values['name'] ?? 'Item Heatmap')) ?: 'Item Heatmap';
+    }
+
+    private function getDisplayTitle(string $widget_name): string {
+        $display_title = trim((string) ($this->fields_values['display_title'] ?? ''));
+
+        return $display_title !== '' ? $display_title : $widget_name;
+    }
+
+    private function shouldShowDisplayTitle(string $display_title): bool {
+        return (int) ($this->fields_values['show_display_title'] ?? 1) === 1 && $display_title !== '';
+    }
+
+    private function getLegendText(): string {
+        return trim((string) ($this->fields_values['legend_text'] ?? ''));
+    }
+
+    private function shouldShowLegend(string $legend_text): bool {
+        return (int) ($this->fields_values['show_legend'] ?? 0) === 1 && $legend_text !== '';
     }
 
     private function getRequestedWeekStart(
