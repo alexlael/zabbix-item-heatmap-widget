@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2.0,
+  "id": "item.heatmap.widget",
+  "type": "widget",
+  "name": "Item Heatmap",
+  "namespace": "ItemHeatmapWidget",
+  "version": "1.0.0",
+  "author": "Oalex.dev",
+  "description": "Heatmap by day of week and hour for selected Zabbix items.",
+  "actions": {
+    "widget.item.heatmap.widget.view": {
+      "class": "WidgetView"
+    }
+  },
+  "assets": {
+    "css": [
+      "widget.css"
+    ],
+    "js": [
+      "class.widget.js"
+    ]
+  },
+  "widget": {
+    "name": "Item Heatmap",
+    "js_class": "CWidgetItemHeatmap",
+    "use_time_selector": true,
+    "refresh_rate": 60
+  }
+}
