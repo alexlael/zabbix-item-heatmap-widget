@@ -4,125 +4,93 @@ namespace Modules\ItemHeatmapWidget\Actions;
 
 use CControllerDashboardWidgetView;
 use CControllerResponseData;
+use Modules\ItemHeatmapWidget\Includes\HeatmapDataProvider;
 
 class WidgetView extends CControllerDashboardWidgetView {
 
-    private const WEEKS_TO_LOAD = 12;
+    protected function init(): void {
+        parent::init();
+
+        $this->addValidationRules([
+            'week_start_ts' => 'int32'
+        ]);
+    }
 
     protected function doAction(): void {
-        $itemids = $this->fields_values['itemids'] ?? [];
-        $aggregation = (int) ($this->fields_values['aggregation'] ?? 0);
-
-        $weeks = [];
-
-        if ($itemids) {
-            $weeks = $this->buildWeeklyMatrices($itemids, $aggregation);
-        }
+        $provider = new HeatmapDataProvider();
+        $itemids = $this->getItemIds();
+        $aggregation = $this->getAggregation();
+        $current_week_start = $provider->getCurrentWeekStart();
+        $oldest_week_start = $provider->getOldestWeekStart($current_week_start);
+        $requested_week_start = $this->getRequestedWeekStart($provider, $current_week_start, $oldest_week_start);
+        $week = $provider->buildWeeklyMatrix($itemids, $aggregation, $requested_week_start);
 
         $this->setResponse(new CControllerResponseData([
             'name' => $this->fields_values['name'] ?? 'Item Heatmap',
             'itemids' => $itemids,
             'aggregation' => $aggregation,
-            'weeks' => $weeks,
+            'week' => $week,
+            'current_week_start_ts' => $current_week_start,
+            'oldest_week_start_ts' => $oldest_week_start,
+            'primary_itemid' => $itemids[0] ?? null,
+            'primary_item_url' => $this->buildPrimaryItemUrl($itemids),
+            'selected_item_count' => count($itemids),
             'user' => [
                 'debug_mode' => $this->getDebugMode()
             ]
         ]));
     }
 
-    private function buildWeeklyMatrices(array $itemids, int $aggregation): array {
-        $weeks = [];
+    private function getItemIds(): array {
+        $itemids = $this->fields_values['itemids'] ?? [];
+        $normalized = [];
 
-        $now = time();
+        foreach ($itemids as $itemid) {
+            $normalized_itemid = (int) $itemid;
 
-        $current_week_start = strtotime('last sunday 00:00:00', $now);
-        if ((int) date('w', $now) === 0) {
-            $current_week_start = strtotime('today 00:00:00', $now);
+            if ($normalized_itemid <= 0 || in_array($normalized_itemid, $normalized, true)) {
+                continue;
+            }
+
+            $normalized[] = $normalized_itemid;
         }
 
-        $global_time_from = $current_week_start - ((self::WEEKS_TO_LOAD - 1) * 7 * 86400);
-        $global_time_till = $current_week_start + (7 * 86400) - 1;
+        return $normalized;
+    }
 
-        $history = \API::History()->get([
-            'output' => ['itemid', 'clock', 'value'],
-            'history' => 3,
-            'itemids' => $itemids,
-            'time_from' => $global_time_from,
-            'time_till' => $global_time_till,
-            'sortfield' => 'clock',
-            'sortorder' => 'ASC',
-            'limit' => 100000
+    private function getAggregation(): int {
+        return (int) ($this->fields_values['aggregation'] ?? HeatmapDataProvider::AGGREGATION_SUM);
+    }
+
+    private function getRequestedWeekStart(
+        HeatmapDataProvider $provider,
+        int $current_week_start,
+        int $oldest_week_start
+    ): int {
+        $requested_week_start = (int) $this->getInput('week_start_ts', $current_week_start);
+        $normalized_week_start = $provider->normalizeWeekStart($requested_week_start);
+
+        if ($normalized_week_start < $oldest_week_start) {
+            return $oldest_week_start;
+        }
+
+        if ($normalized_week_start > $current_week_start) {
+            return $current_week_start;
+        }
+
+        return $normalized_week_start;
+    }
+
+    private function buildPrimaryItemUrl(array $itemids): ?string {
+        if ($itemids === []) {
+            return null;
+        }
+
+        return 'history.php?' . http_build_query([
+            'action' => 'showgraph',
+            'itemids' => [(int) $itemids[0]],
+            'from' => 'now-7d',
+            'to' => 'now'
         ]);
-
-        $bucket_values = [];
-
-        foreach ($history as $row) {
-            $clock = (int) $row['clock'];
-            $value = (float) $row['value'];
-
-            $week_start = strtotime('last sunday 00:00:00', $clock);
-            if ((int) date('w', $clock) === 0) {
-                $week_start = strtotime('today 00:00:00', $clock);
-            }
-
-            $day = (int) date('w', $clock);
-            $hour = (int) date('G', $clock);
-
-            $bucket_values[$week_start][$day][$hour][] = $value;
-        }
-
-        for ($i = 0; $i < self::WEEKS_TO_LOAD; $i++) {
-            $week_start = $current_week_start - ((self::WEEKS_TO_LOAD - 1 - $i) * 7 * 86400);
-            $week_end = $week_start + (7 * 86400) - 1;
-
-            $matrix = [];
-            $max_value = 0;
-
-            for ($day = 0; $day < 7; $day++) {
-                for ($hour = 0; $hour < 24; $hour++) {
-                    $values = $bucket_values[$week_start][$day][$hour] ?? [];
-
-                    if (!$values) {
-                        $matrix[$day][$hour] = 0;
-                        continue;
-                    }
-
-                    switch ($aggregation) {
-                        case 1:
-                            $result = round(array_sum($values) / count($values), 2);
-                            break;
-
-                        case 2:
-                            $result = max($values);
-                            break;
-
-                        case 3:
-                            $result = count(array_filter($values, static fn($v) => $v > 0));
-                            break;
-
-                        case 0:
-                        default:
-                            $result = array_sum($values);
-                            break;
-                    }
-
-                    $matrix[$day][$hour] = $result;
-
-                    if ($result > $max_value) {
-                        $max_value = $result;
-                    }
-                }
-            }
-
-            $weeks[] = [
-                'start_ts' => $week_start,
-                'end_ts' => $week_end,
-                'label' => date('d/m', $week_start) . ' - ' . date('d/m', $week_end),
-                'matrix' => $matrix,
-                'max_value' => $max_value
-            ];
-        }
-
-        return $weeks;
     }
 }
