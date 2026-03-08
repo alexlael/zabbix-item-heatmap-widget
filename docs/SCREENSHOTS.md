@@ -6,21 +6,17 @@ purpose of each image.
 ## Screenshot Inventory
 
 - `docs/images/heatmap-example.png`
-  Purpose: Hero image that shows the widget rendering a weekly heatmap on a
-  Zabbix dashboard.
+  Purpose: Main product screenshot showing the widget in comparison mode with
+  multiple items.
 - `docs/images/widget-config.png`
-  Purpose: Illustrates the widget configuration options in the Zabbix UI.
-- `docs/images/container-error-test.png`
-  Purpose: Shows the container log signal used as an example source for log
-  to metric conversion.
-- `docs/images/item-log-source.png`
-  Purpose: Shows the Zabbix log item that captures the source logs.
-- `docs/images/dependent-item-config.png`
-  Purpose: Shows the dependent item configuration that turns logs into a
-  numeric item.
-- `docs/images/preprocessing-script.png`
-  Purpose: Shows the preprocessing step used to count a specific log pattern.
+  Purpose: Shows the current widget configuration fields available in the
+  Zabbix UI.
+- `docs/images/heatmap-tooltip.png`
+  Purpose: Shows the hover tooltip with bucket details and item context.
+- `docs/images/heatmap-drilldown.png`
+  Purpose: Shows the drill-down menu available from a populated cell.
 - `docs/images/latest-data-values.png`
-  Purpose: Shows validation of the generated numeric values in `Latest data`.
+  Purpose: Shows numeric items in `Latest data` that can be used as heatmap
+  inputs.
 - `docs/images/heatmap-week-navigation.png`
-  Purpose: Shows the week navigation controls used to move through history.
+  Purpose: Shows the week navigation controls inside the widget header.

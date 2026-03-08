@@ -1,42 +1,37 @@
 # Item Heatmap Widget for Zabbix
 
-Item Heatmap is a custom Zabbix widget for the Zabbix dashboard that
-turns numeric item history into a weekly heatmap by day of week and hour.
-It helps monitoring and observability teams spot recurring patterns,
-correlate noisy periods, and understand when activity clusters across the
-week.
+Item Heatmap is a custom widget for the Zabbix dashboard that turns numeric
+item history into a weekly heatmap by day of week and hour. It is designed
+for monitoring and observability teams that need to understand when activity
+clusters, when specific services become noisy, and how recurring issues
+evolve over time.
+
+It works especially well with numeric metrics derived from Docker logs,
+container errors, warnings, timeouts, and exceptions.
 
 ![Weekly heatmap example](docs/images/heatmap-example.png)
 
 ## Features
 
-- Visualize one or more Zabbix items as a heatmap in a weekly layout.
-- Aggregate values by day of week and hour to expose operational patterns.
-- Support multiple aggregation modes, including sum, average, maximum, and
-  count non-zero.
-- Compare multiple items in the same widget or consolidate them into a
-  single weekly heatmap.
-- Navigate week by week with on-demand loading instead of preloading all
-  history.
-- Use hover tooltips and cell drill-down to move from pattern recognition to
-  investigation.
-- Fit naturally into a Zabbix dashboard without changing the widget's
-  functional flow.
-- Work well with numeric metrics derived from Docker logs and container
-  errors.
+- Render one or more numeric Zabbix items as a weekly heatmap.
+- Aggregate data by day of week and hour.
+- Support `Sum`, `Average`, `Maximum`, and `Count non-zero`.
+- Switch between a consolidated view and item-by-item comparison mode.
+- Navigate week by week with on-demand loading.
+- Show hover tooltips with bucket details, latest value, and item context.
+- Open drill-down actions directly from a populated cell.
+- Support 12-hour and 24-hour hour labels.
+- Allow a custom internal title and optional legend/context line.
+- Adapt the visual palette to the active Zabbix theme.
 
 ## Use Cases
 
-- Identify recurring application failures that cluster on specific weekdays
-  or business hours.
-- Visualize numeric item trends generated from Docker logs, such as error
-  counters, retry counters, or timeout rates.
-- Compare multiple services, queues, workers, or containers inside the same
-  weekly heatmap view.
-- Support incident reviews by showing when a problem started to become
-  recurrent rather than only how often it occurred.
-- Build a lightweight monitoring view for teams that need visual pattern
-  recognition directly inside Zabbix.
+- Identify recurring container errors during specific hours or weekdays.
+- Compare multiple services or containers in the same dashboard widget.
+- Transform raw Docker logs into operational counters and visualize them as a
+  heatmap.
+- Review incident patterns without leaving the Zabbix dashboard.
+- Build lightweight visual monitoring for noisy workloads and background jobs.
 
 ## Installation
 
@@ -62,75 +57,71 @@ week.
 
 ## Adding the Widget
 
-1. Open the target Zabbix dashboard.
+1. Open the target dashboard.
 2. Click `Edit dashboard`.
 3. Add a new widget and choose `Item Heatmap`.
 4. Select one or more numeric items.
-5. Choose the aggregation mode, display mode, period window, and
-   granularity.
-6. Optionally define an internal title and legend for the widget.
+5. Choose the aggregation mode, display mode, period window, granularity,
+   and hour format.
+6. Optionally define a display title and legend/context line.
 7. Save the dashboard.
 
-The current widget configuration includes controls for multiple items,
-aggregation, display mode, period window, granularity, hour format, title,
-and legend.
+The current configuration supports multiple items, comparison mode, period
+window, granularity, hour format, title, and legend.
 
 ![Widget configuration](docs/images/widget-config.png)
 
-## Converting Logs into Numeric Metrics
+## Interaction Model
 
-One of the most practical workflows for this project is turning Docker logs
-into a numeric item and then rendering that item as a heatmap.
+The widget is built to move quickly from pattern recognition to
+investigation.
 
-Flow:
+### Hover Tooltip
 
-```text
-container logs -> log item -> dependent numeric item -> weekly heatmap
-```
+On hover, the widget shows the week label, day, time bucket, aggregated
+value, latest value, and item context for the selected cell.
 
-This pattern is especially useful for container errors, warnings, timeouts,
-and exceptions that are easier to reason about as counters than as raw log
-streams.
+![Heatmap tooltip](docs/images/heatmap-tooltip.png)
 
-Start with the raw log source that captures the signal you want to count.
+### Drill-Down Actions
 
-![Container log sample](docs/images/container-error-test.png)
+Clicking a populated cell opens drill-down actions that make investigation
+practical inside Zabbix, such as graph access, history values, latest data,
+and related problems.
 
-Create or reuse a log item that ingests the source logs in Zabbix.
+![Heatmap drill-down menu](docs/images/heatmap-drilldown.png)
 
-![Log item source](docs/images/item-log-source.png)
+### Weekly Navigation
 
-Create a dependent item that converts those logs into a numeric item. This
-dependent item becomes the data source used by the widget.
-
-![Dependent item configuration](docs/images/dependent-item-config.png)
-
-Add preprocessing logic to count the pattern you care about, such as
-`ERROR`, `WARNING`, or `TIMEOUT`.
-
-```javascript
-var matches = value.match(/ERROR/g);
-return matches ? matches.length : 0;
-```
-
-![Preprocessing script](docs/images/preprocessing-script.png)
-
-Validate that the dependent item is producing numeric values in `Latest
-data` before adding it to the dashboard.
-
-![Latest data validation](docs/images/latest-data-values.png)
-
-With that pipeline in place, the widget becomes a compact visual layer for
-weekly monitoring, observability, and pattern analysis.
-
-## Weekly Navigation
-
-The widget supports week-by-week navigation so you can move backward and
-forward through the available history without rebuilding the dashboard.
-This is useful when comparing incident-heavy weeks with quieter periods or
-when reviewing how a numeric item evolved over time.
+The widget supports week-by-week navigation so you can move through history
+without rebuilding the dashboard or loading every week upfront.
 
 ![Weekly navigation](docs/images/heatmap-week-navigation.png)
+
+## Converting Logs into Numeric Metrics
+
+One of the most practical workflows for this widget is converting raw Docker
+logs into numeric counters and then visualizing those counters as a weekly
+heatmap.
+
+```text
+container logs -> log item -> dependent numeric item -> heatmap
+```
+
+Typical examples include counting:
+
+- `ERROR` occurrences per check
+- `WARNING` occurrences per check
+- timeout messages
+- exception messages
+
+Once the dependent items are producing numeric values, they can be selected
+directly in the widget and compared side by side.
+
+The screenshot below shows numeric items in `Latest data`, ready to feed the
+heatmap.
+
+![Latest data validation](docs/images/latest-data-values.png)
 
 ## Project Structure
 
@@ -161,8 +152,8 @@ zabbix-item-heatmap-widget
 
 ## Compatibility
 
-This repository is intended for modern Zabbix environments. The current
-project state has been tested in a Zabbix 7.4.x environment.
+This repository targets modern Zabbix environments. The current project
+state has been tested in a Zabbix 7.4.x environment.
 
 If you plan to use it with another Zabbix version, validate the widget in
 your own deployment before rolling it out broadly.
@@ -170,10 +161,10 @@ your own deployment before rolling it out broadly.
 ## Roadmap
 
 - Expand compatibility validation across additional Zabbix 7.x releases.
-- Improve drill-down options for bucket-level investigation.
-- Add more documentation examples for numeric item pipelines based on logs.
-- Broaden comparison scenarios for multi-item heatmap analysis.
-- Publish release notes and examples for common monitoring workflows.
+- Improve bucket-level investigation and drill-down paths.
+- Add more examples for numeric items derived from logs.
+- Extend comparison scenarios for multi-item heatmap analysis.
+- Publish more documented monitoring workflows and release notes.
 
 ## License
 
