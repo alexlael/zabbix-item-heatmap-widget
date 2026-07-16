@@ -77,16 +77,21 @@ class WidgetView extends CControllerDashboardWidgetView {
 
     private function getAssociatedLogItemId(): ?int {
         $itemids = $this->fields_values['log_itemids'] ?? [];
+        $normalized = [];
 
         foreach ($itemids as $itemid) {
             $normalized_itemid = (int) $itemid;
 
-            if ($normalized_itemid > 0) {
-                return $normalized_itemid;
+            if ($normalized_itemid <= 0 || in_array($normalized_itemid, $normalized, true)) {
+                continue;
             }
+
+            $normalized[] = $normalized_itemid;
         }
 
-        return null;
+        return count($normalized) === 1
+            ? $normalized[0]
+            : null;
     }
 
     private function getAggregation(): int {
