@@ -11,6 +11,9 @@
             ->setPopupParameter('numeric', true)
     )
     ->addField(
+        new CWidgetFieldMultiSelectItemView($data['fields']['log_itemids'])
+    )
+    ->addField(
         new CWidgetFieldSelectView($data['fields']['aggregation'])
     )
     ->addField(
