@@ -65,11 +65,11 @@ class WidgetForm extends CWidgetForm {
                 ]))->setDefault(0)
             )
             ->addField(
-                (new CWidgetFieldTextBox('color_low_threshold', _('Low threshold')))
+                (new CWidgetFieldTextBox('color_scale_low', _('Low threshold')))
                     ->setDefault('3')
             )
             ->addField(
-                (new CWidgetFieldTextBox('color_high_threshold', _('High threshold')))
+                (new CWidgetFieldTextBox('color_scale_high', _('High threshold')))
                     ->setDefault('10')
             )
             ->addField(
