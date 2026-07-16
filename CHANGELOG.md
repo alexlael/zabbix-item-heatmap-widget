@@ -7,7 +7,7 @@ for project releases.
 
 ## [1.1.0] - 2026-07-16
 
-### Added
+### Added in 1.1.0
 
 - Optional `Associated log item` field in the widget configuration.
 - `Error logs` drill-down action for populated heatmap cells.
@@ -17,14 +17,14 @@ for project releases.
 - Documentation for the `asterisk.errors.total` and `asterisk.errors.log`
   integration pattern.
 
-### Changed
+### Changed in 1.1.0
 
 - Widget manifest version updated from `1.0.0` to `1.1.0`.
 - Project description updated to mention optional log drill-down.
 - README updated with configuration, investigation flow, compatibility notes,
   and release details.
 
-### Validation
+### Validation for 1.1.0
 
 - The log drill-down is enabled only when exactly one distinct valid associated
   log item is configured.
@@ -33,7 +33,7 @@ for project releases.
 
 ## [1.0.0] - 2026-03-08
 
-### Added
+### Added in 1.0.0
 
 - Initial public project structure for the Item Heatmap widget.
 - Weekly heatmap visualization for numeric item data in Zabbix.
