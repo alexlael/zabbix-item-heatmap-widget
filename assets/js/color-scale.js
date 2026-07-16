@@ -94,10 +94,44 @@
 		}
 
 		const canvasWidth = ctx.canvas.width / (window.devicePixelRatio || 1);
-		const legendX = metrics.outerPaddingX;
-		const availableWidth = canvasWidth - (metrics.outerPaddingX * 2);
-		const gradientX = legendX + 52;
-		const gradientWidth = itemHeatmapClamp(availableWidth * 0.18, 110, 170);
+		const left = metrics.outerPaddingX;
+		const right = canvasWidth - metrics.outerPaddingX;
+		const gap = 8;
+		const modeLabel = 'Manual scale';
+		let lowLabel = `Low <= ${this.formatValue(this._colorScaleLow)}`;
+		let highLabel = `High >= ${this.formatValue(this._colorScaleHigh)}`;
+
+		ctx.textBaseline = 'middle';
+		ctx.textAlign = 'left';
+		ctx.font = itemHeatmapFont(10, 700);
+
+		let lowWidth = ctx.measureText(lowLabel).width;
+		let highWidth = ctx.measureText(highLabel).width;
+		ctx.font = itemHeatmapFont(9, 600);
+		const modeWidth = ctx.measureText(modeLabel).width;
+		let showMode = true;
+		let modeReserve = modeWidth + gap;
+		let gradientX = Math.max(metrics.gridX, left + lowWidth + gap);
+		let gradientEndLimit = right - modeReserve - highWidth - gap;
+
+		if (gradientEndLimit - gradientX < 72) {
+			showMode = false;
+			modeReserve = 0;
+			gradientEndLimit = right - highWidth - gap;
+		}
+
+		if (gradientEndLimit - gradientX < 56) {
+			lowLabel = `<= ${this.formatValue(this._colorScaleLow)}`;
+			highLabel = `>= ${this.formatValue(this._colorScaleHigh)}`;
+			ctx.font = itemHeatmapFont(10, 700);
+			lowWidth = ctx.measureText(lowLabel).width;
+			highWidth = ctx.measureText(highLabel).width;
+			gradientX = Math.max(metrics.gridX, left + lowWidth + gap);
+			gradientEndLimit = right - highWidth - gap;
+		}
+
+		const gradientWidth = Math.max(36, gradientEndLimit - gradientX);
+		const highLabelX = Math.min(gradientX + gradientWidth + gap, right - highWidth - modeReserve);
 		const gradient = ctx.createLinearGradient(gradientX, 0, gradientX + gradientWidth, 0);
 		gradient.addColorStop(0, palette.scale[0]);
 		gradient.addColorStop(0.25, palette.scale[1]);
@@ -105,17 +139,17 @@
 		gradient.addColorStop(0.75, palette.scale[3]);
 		gradient.addColorStop(1, palette.scale[4]);
 
-		ctx.textBaseline = 'middle';
 		ctx.font = itemHeatmapFont(10, 700);
-		ctx.textAlign = 'left';
 		ctx.fillStyle = palette.legendText;
-		ctx.fillText(`Low <= ${this.formatValue(this._colorScaleLow)}`, legendX, legendY);
+		ctx.fillText(lowLabel, left, legendY);
 		itemHeatmapDrawRoundedRect(ctx, gradientX, legendY - 4, gradientWidth, 8, 4, gradient);
-		ctx.fillText(`High >= ${this.formatValue(this._colorScaleHigh)}`, gradientX + gradientWidth + 10, legendY);
+		ctx.fillText(highLabel, highLabelX, legendY);
 
-		ctx.textAlign = 'right';
-		ctx.font = itemHeatmapFont(9, 600);
-		ctx.fillStyle = palette.textMuted;
-		ctx.fillText('Manual scale', canvasWidth - metrics.outerPaddingX, legendY);
+		if (showMode) {
+			ctx.textAlign = 'right';
+			ctx.font = itemHeatmapFont(9, 600);
+			ctx.fillStyle = palette.textMuted;
+			ctx.fillText(modeLabel, right, legendY);
+		}
 	};
 })();
