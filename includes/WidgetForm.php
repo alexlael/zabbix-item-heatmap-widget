@@ -59,6 +59,20 @@ class WidgetForm extends CWidgetForm {
                 ]))->setDefault(12)
             )
             ->addField(
+                (new CWidgetFieldSelect('color_scale_mode', _('Color scale'), [
+                    0 => _('Automatic'),
+                    1 => _('Manual thresholds')
+                ]))->setDefault(0)
+            )
+            ->addField(
+                (new CWidgetFieldTextBox('color_low_threshold', _('Low threshold')))
+                    ->setDefault('3')
+            )
+            ->addField(
+                (new CWidgetFieldTextBox('color_high_threshold', _('High threshold')))
+                    ->setDefault('10')
+            )
+            ->addField(
                 (new CWidgetFieldCheckBox('show_display_title', _('Show display title')))
                     ->setDefault(1)
             )
