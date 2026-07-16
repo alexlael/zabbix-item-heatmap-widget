@@ -1,14 +1,16 @@
+# Pull Request
+
 ## Summary
 
 Describe the change in a few sentences.
 
 ## What Changed
 
-- 
+- Describe the implementation.
 
 ## Verification
 
-- 
+- Describe how the change was tested.
 
 ## Documentation
 

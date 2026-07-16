@@ -20,7 +20,10 @@ container errors, warnings, timeouts, and exceptions.
 - Navigate week by week with on-demand loading.
 - Show hover tooltips with bucket details, latest value, and item context.
 - Open drill-down actions directly from a populated cell.
-- Support 12-hour and 24-hour hour labels.
+- Associate one log or text item with the heatmap for bucket-level log review.
+- Open the associated log history using the exact start and end time of the
+  clicked heatmap cell.
+- Support 12-hour and 24-hour time labels.
 - Allow a custom internal title and optional legend/context line.
 - Adapt the visual palette to the active Zabbix theme.
 
@@ -30,7 +33,9 @@ container errors, warnings, timeouts, and exceptions.
 - Compare multiple services or containers in the same dashboard widget.
 - Transform raw Docker logs into operational counters and visualize them as a
   heatmap.
-- Review incident patterns without leaving the Zabbix dashboard.
+- Use a numeric counter to locate noisy periods and then open the original logs
+  for the same time bucket.
+- Review incident patterns without leaving the Zabbix investigation workflow.
 - Build lightweight visual monitoring for noisy workloads and background jobs.
 
 ## Installation
@@ -61,13 +66,19 @@ container errors, warnings, timeouts, and exceptions.
 2. Click `Edit dashboard`.
 3. Add a new widget and choose `Item Heatmap`.
 4. Select one or more numeric items.
-5. Choose the aggregation mode, display mode, period window, granularity,
+5. Optionally select exactly one item in `Associated log item`.
+6. Choose the aggregation mode, display mode, period window, granularity,
    and hour format.
-6. Optionally define a display title and legend/context line.
-7. Save the dashboard.
+7. Optionally define a display title and legend/context line.
+8. Save the dashboard.
 
-The current configuration supports multiple items, comparison mode, period
-window, granularity, hour format, title, and legend.
+The associated log item is optional. When exactly one valid item is selected,
+the populated-cell menu includes an `Error logs` action. If no item or more
+than one distinct item is configured, the log drill-down is disabled.
+
+The current configuration supports multiple numeric items, comparison mode,
+period window, granularity, hour format, title, legend, and one associated log
+item.
 
 ![Widget configuration](docs/images/widget-config.png)
 
@@ -87,7 +98,12 @@ value, latest value, and item context for the selected cell.
 
 Clicking a populated cell opens drill-down actions that make investigation
 practical inside Zabbix, such as graph access, history values, latest data,
-and related problems.
+related problems, and the associated error logs.
+
+The `Error logs` action opens the configured log item's value history using
+the exact time interval represented by the clicked cell. For example, clicking
+a one-hour cell for `10:00` opens log values from `10:00:00` through
+`10:59:59`.
 
 ![Heatmap drill-down menu](docs/images/heatmap-drilldown.png)
 
@@ -100,12 +116,12 @@ without rebuilding the dashboard or loading every week upfront.
 
 ## Converting Logs into Numeric Metrics
 
-One of the most practical workflows for this widget is converting raw Docker
-logs into numeric counters and then visualizing those counters as a weekly
-heatmap.
+One of the most practical workflows for this widget is storing both a numeric
+counter and the original log message in Zabbix.
 
 ```text
-container logs -> log item -> dependent numeric item -> heatmap
+container logs -> numeric counter item -> heatmap
+               -> log/text item       -> associated log drill-down
 ```
 
 Typical examples include counting:
@@ -114,9 +130,25 @@ Typical examples include counting:
 - `WARNING` occurrences per check
 - timeout messages
 - exception messages
+- Asterisk peer `UNREACHABLE` events
 
-Once the dependent items are producing numeric values, they can be selected
-directly in the widget and compared side by side.
+Example configuration:
+
+```text
+Heatmap item:
+asterisk.errors.total
+
+Associated log item:
+asterisk.errors.log
+```
+
+The numeric item receives values such as `1` for each detected event. The log
+item stores the original message, including timestamps, modules, extensions,
+peers, or other context needed during investigation.
+
+Once the numeric items are producing values, they can be selected directly in
+the widget and compared side by side. The associated log item can then be used
+to inspect the original messages for a populated bucket.
 
 The screenshot below shows numeric items in `Latest data`, ready to feed the
 heatmap.
@@ -134,7 +166,8 @@ zabbix-item-heatmap-widget
 |   |-- css/
 |   |   `-- widget.css
 |   `-- js/
-|       `-- class.widget.js
+|       |-- class.widget.js
+|       `-- log-drilldown.js
 |-- docs/
 |   |-- images/
 |   `-- SCREENSHOTS.md
@@ -152,16 +185,24 @@ zabbix-item-heatmap-widget
 
 ## Compatibility
 
-This repository targets modern Zabbix environments. The current project
-state has been tested in a Zabbix 7.4.x environment.
+This repository targets modern Zabbix environments. The core widget has been
+tested in Zabbix 7.4.x, and the counter plus associated-log workflow has also
+been validated in a Zabbix 7.0.x environment.
 
-If you plan to use it with another Zabbix version, validate the widget in
-your own deployment before rolling it out broadly.
+If you plan to use it with another Zabbix version, validate the widget in your
+own deployment before rolling it out broadly.
+
+## Release 1.1.0
+
+Version `1.1.0` adds optional associated-log drill-down. A heatmap cell can now
+open the original log or text item values for the exact bucket interval while
+preserving all existing graph, primary-item history, latest-data, and related-
+problem actions.
 
 ## Roadmap
 
 - Expand compatibility validation across additional Zabbix 7.x releases.
-- Improve bucket-level investigation and drill-down paths.
+- Improve bucket-level investigation with an optional in-dashboard log modal.
 - Add more examples for numeric items derived from logs.
 - Extend comparison scenarios for multi-item heatmap analysis.
 - Publish more documented monitoring workflows and release notes.
