@@ -23,6 +23,7 @@ $container = (new CDiv())
     ->setAttribute('data-oldest-week-start', (string) ($data['oldest_week_start_ts'] ?? 0))
     ->setAttribute('data-primary-itemid', (string) ($data['primary_itemid'] ?? 0))
     ->setAttribute('data-primary-item-url', $data['primary_item_url'] ?? '')
+    ->setAttribute('data-associated-log-itemid', (string) ($data['associated_log_itemid'] ?? 0))
     ->setAttribute('data-selected-item-count', (string) ($data['selected_item_count'] ?? 0))
     ->addItem(
         (new CDiv())
