@@ -4,9 +4,9 @@
   "type": "widget",
   "name": "Item Heatmap",
   "namespace": "ItemHeatmapWidget",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Oalex.dev",
-  "description": "Heatmap by day of week and hour for selected Zabbix items, with optional log drill-down.",
+  "description": "Heatmap by day of week and hour for selected Zabbix items, with optional log drill-down and configurable color thresholds.",
   "actions": {
     "widget.item.heatmap.widget.view": {
       "class": "WidgetView"
@@ -18,7 +18,8 @@
     ],
     "js": [
       "class.widget.js",
-      "log-drilldown.js"
+      "log-drilldown.js",
+      "color-scale.js"
     ]
   },
   "widget": {
