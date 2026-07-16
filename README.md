@@ -23,7 +23,7 @@ container errors, warnings, timeouts, and exceptions.
 - Associate one log or text item with the heatmap for bucket-level log review.
 - Open the associated log history using the exact start and end time of the
   clicked heatmap cell.
-- Support 12-hour and 24-hour hour labels.
+- Support 12-hour and 24-hour time labels.
 - Allow a custom internal title and optional legend/context line.
 - Adapt the visual palette to the active Zabbix theme.
 
