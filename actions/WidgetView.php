@@ -134,8 +134,10 @@ class WidgetView extends CControllerDashboardWidgetView {
     }
 
     private function getColorScaleThresholds(): array {
-        $low = max(0.0, (float) ($this->fields_values['color_scale_low'] ?? 3));
-        $high = max(0.0, (float) ($this->fields_values['color_scale_high'] ?? 10));
+        $low_raw = trim((string) ($this->fields_values['color_scale_low'] ?? ''));
+        $high_raw = trim((string) ($this->fields_values['color_scale_high'] ?? ''));
+        $low = $low_raw === '' ? 3.0 : max(0.0, (float) $low_raw);
+        $high = $high_raw === '' ? 10.0 : max(0.0, (float) $high_raw);
 
         if ($high <= $low) {
             $high = $low + 1;
