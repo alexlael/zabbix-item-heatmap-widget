@@ -25,6 +25,8 @@ class WidgetView extends CControllerDashboardWidgetView {
         $period_weeks = $provider->normalizePeriodWeeks($this->getPeriodWeeks());
         $slot_seconds = $provider->normalizeSlotSeconds($this->getSlotSeconds());
         $hour_format = $this->getHourFormat();
+        $color_scale_mode = $this->getColorScaleMode();
+        [$color_scale_low, $color_scale_high] = $this->getColorScaleThresholds();
         $current_week_start = $provider->getCurrentWeekStart();
         $oldest_week_start = $provider->getOldestWeekStart($current_week_start, $period_weeks);
         $requested_week_start = $this->getRequestedWeekStart($provider, $current_week_start, $oldest_week_start);
@@ -42,6 +44,9 @@ class WidgetView extends CControllerDashboardWidgetView {
             'period_weeks' => $period_weeks,
             'slot_seconds' => $slot_seconds,
             'hour_format' => $hour_format,
+            'color_scale_mode' => $color_scale_mode,
+            'color_scale_low' => $color_scale_low,
+            'color_scale_high' => $color_scale_high,
             'week' => $week,
             'current_week_start_ts' => $current_week_start,
             'oldest_week_start_ts' => $oldest_week_start,
@@ -122,6 +127,21 @@ class WidgetView extends CControllerDashboardWidgetView {
         }
 
         return 12;
+    }
+
+    private function getColorScaleMode(): int {
+        return (int) ($this->fields_values['color_scale_mode'] ?? 0) === 1 ? 1 : 0;
+    }
+
+    private function getColorScaleThresholds(): array {
+        $low = max(0.0, (float) ($this->fields_values['color_scale_low'] ?? 3));
+        $high = max(0.0, (float) ($this->fields_values['color_scale_high'] ?? 10));
+
+        if ($high <= $low) {
+            $high = $low + 1;
+        }
+
+        return [$low, $high];
     }
 
     private function getWidgetName(): string {
