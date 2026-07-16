@@ -1,4 +1,8 @@
 (() => {
+	if (typeof CWidgetItemHeatmap === 'undefined') {
+		return;
+	}
+
 	const COLOR_SCALE_AUTOMATIC = 0;
 	const COLOR_SCALE_MANUAL = 1;
 	const originalEnsureState = CWidgetItemHeatmap.prototype.ensureState;
@@ -20,7 +24,16 @@
 	};
 
 	CWidgetItemHeatmap.prototype.processUpdateResponse = function(response) {
-		originalProcessUpdateResponse.call(this, response);
+		const drawCurrentWeek = this.drawCurrentWeek;
+
+		this.drawCurrentWeek = () => {};
+
+		try {
+			originalProcessUpdateResponse.call(this, response);
+		}
+		finally {
+			this.drawCurrentWeek = drawCurrentWeek;
+		}
 
 		if (!this._container) {
 			return;
@@ -39,7 +52,7 @@
 			this._colorScaleHigh = this._colorScaleLow + 1;
 		}
 
-		this.drawCurrentWeek();
+		drawCurrentWeek.call(this);
 	};
 
 	CWidgetItemHeatmap.prototype.getCellColor = function(value, maxValue, palette) {
