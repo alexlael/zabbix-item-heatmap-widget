@@ -16,6 +16,9 @@ class WidgetForm extends CWidgetForm {
                 new CWidgetFieldMultiSelectItem('itemids', _('Items'))
             )
             ->addField(
+                new CWidgetFieldMultiSelectItem('log_itemids', _('Associated log item'))
+            )
+            ->addField(
                 (new CWidgetFieldSelect('aggregation', _('Aggregation'), [
                     0 => _('Sum'),
                     1 => _('Average'),
