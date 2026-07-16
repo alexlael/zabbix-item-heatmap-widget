@@ -19,6 +19,7 @@ class WidgetView extends CControllerDashboardWidgetView {
     protected function doAction(): void {
         $provider = new HeatmapDataProvider();
         $itemids = $this->getItemIds();
+        $associated_log_itemid = $this->getAssociatedLogItemId();
         $aggregation = $this->getAggregation();
         $display_mode = $provider->normalizeDisplayMode($this->getDisplayMode());
         $period_weeks = $provider->normalizePeriodWeeks($this->getPeriodWeeks());
@@ -35,6 +36,7 @@ class WidgetView extends CControllerDashboardWidgetView {
         $this->setResponse(new CControllerResponseData([
             'name' => $widget_name,
             'itemids' => $itemids,
+            'associated_log_itemid' => $associated_log_itemid,
             'aggregation' => $aggregation,
             'display_mode' => $display_mode,
             'period_weeks' => $period_weeks,
@@ -71,6 +73,20 @@ class WidgetView extends CControllerDashboardWidgetView {
         }
 
         return $normalized;
+    }
+
+    private function getAssociatedLogItemId(): ?int {
+        $itemids = $this->fields_values['log_itemids'] ?? [];
+
+        foreach ($itemids as $itemid) {
+            $normalized_itemid = (int) $itemid;
+
+            if ($normalized_itemid > 0) {
+                return $normalized_itemid;
+            }
+        }
+
+        return null;
     }
 
     private function getAggregation(): int {
