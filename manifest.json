@@ -4,7 +4,7 @@
   "type": "widget",
   "name": "Item Heatmap",
   "namespace": "ItemHeatmapWidget",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": "Oalex.dev",
   "description": "Heatmap by day of week and hour for selected Zabbix items, with optional log drill-down and configurable color thresholds.",
   "actions": {

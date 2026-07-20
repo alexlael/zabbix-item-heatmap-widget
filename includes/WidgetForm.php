@@ -73,14 +73,6 @@ class WidgetForm extends CWidgetForm {
                     ->setDefault('10')
             )
             ->addField(
-                (new CWidgetFieldCheckBox('show_display_title', _('Show display title')))
-                    ->setDefault(1)
-            )
-            ->addField(
-                (new CWidgetFieldTextBox('display_title', _('Display title')))
-                    ->setDefault('')
-            )
-            ->addField(
                 (new CWidgetFieldCheckBox('show_legend', _('Show legend')))
                     ->setDefault(0)
             )
