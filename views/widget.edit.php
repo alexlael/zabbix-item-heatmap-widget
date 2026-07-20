@@ -38,12 +38,6 @@
         new CWidgetFieldTextBoxView($data['fields']['color_scale_high'])
     )
     ->addField(
-        new CWidgetFieldCheckBoxView($data['fields']['show_display_title'])
-    )
-    ->addField(
-        new CWidgetFieldTextBoxView($data['fields']['display_title'])
-    )
-    ->addField(
         new CWidgetFieldCheckBoxView($data['fields']['show_legend'])
     )
     ->addField(
