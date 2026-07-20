@@ -32,7 +32,6 @@ class WidgetView extends CControllerDashboardWidgetView {
         $requested_week_start = $this->getRequestedWeekStart($provider, $current_week_start, $oldest_week_start);
         $week = $provider->buildWeeklyMatrix($itemids, $aggregation, $requested_week_start, $slot_seconds);
         $widget_name = $this->getWidgetName();
-        $display_title = $this->getDisplayTitle($widget_name);
         $legend_text = $this->getLegendText();
 
         $this->setResponse(new CControllerResponseData([
@@ -53,8 +52,8 @@ class WidgetView extends CControllerDashboardWidgetView {
             'primary_itemid' => $itemids[0] ?? null,
             'primary_item_url' => $this->buildPrimaryItemUrl($itemids),
             'selected_item_count' => count($itemids),
-            'display_title' => $display_title,
-            'show_display_title' => $this->shouldShowDisplayTitle($display_title),
+            'display_title' => '',
+            'show_display_title' => false,
             'legend_text' => $legend_text,
             'show_legend' => $this->shouldShowLegend($legend_text),
             'user' => [
@@ -148,16 +147,6 @@ class WidgetView extends CControllerDashboardWidgetView {
 
     private function getWidgetName(): string {
         return trim((string) ($this->fields_values['name'] ?? 'Item Heatmap')) ?: 'Item Heatmap';
-    }
-
-    private function getDisplayTitle(string $widget_name): string {
-        $display_title = trim((string) ($this->fields_values['display_title'] ?? ''));
-
-        return $display_title !== '' ? $display_title : $widget_name;
-    }
-
-    private function shouldShowDisplayTitle(string $display_title): bool {
-        return (int) ($this->fields_values['show_display_title'] ?? 1) === 1 && $display_title !== '';
     }
 
     private function getLegendText(): string {
