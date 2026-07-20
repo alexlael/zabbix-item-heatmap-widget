@@ -44,25 +44,3 @@
         new CWidgetFieldTextBoxView($data['fields']['legend_text'])
     )
     ->show();
-
-(new CScriptTag(<<<'JS'
-(() => {
-    const showLegend = document.getElementById('show_legend');
-    const legendText = document.getElementById('legend_text');
-
-    if (!showLegend || !legendText) {
-        return;
-    }
-
-    const legendRow = legendText.closest('.form-field') || legendText.parentElement;
-    const updateLegendVisibility = () => {
-        if (legendRow) {
-            legendRow.style.display = showLegend.checked ? '' : 'none';
-        }
-    };
-
-    showLegend.addEventListener('change', updateLegendVisibility);
-    updateLegendVisibility();
-})();
-JS
-))->show();
