@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is inspired by Keep a Changelog and follows semantic versioning
 for project releases.
 
+## [1.2.1] - 2026-07-20
+
+### Changed in 1.2.1
+
+- Removed the redundant custom display-title controls from the widget form.
+- The native Zabbix widget `Name` and `Show header` controls are now the only title controls.
+- The `Legend / context` field is hidden unless `Show legend` is enabled.
+- Manual-threshold legends now use the same compact footprint as automatic legends.
+- Removed the redundant `Manual scale` text from the rendered legend.
+
+### Validation for 1.2.1
+
+- Existing saved widgets remain compatible; legacy display-title values are ignored.
+- Manual legend labels continue to show the effective low and high thresholds.
+- Automatic color behavior remains unchanged.
+
 ## [1.2.0] - 2026-07-16
 
 ### Added in 1.2.0
