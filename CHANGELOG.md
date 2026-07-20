@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is inspired by Keep a Changelog and follows semantic versioning
 for project releases.
 
+## [1.2.0] - 2026-07-16
+
+### Added in 1.2.0
+
+- `Color scale` configuration with `Automatic` and `Manual thresholds` modes.
+- Configurable low and high threshold values for stable operational coloring.
+- Manual-scale legend labels that expose the effective low and high limits.
+- Separate frontend color-scale behavior loaded through `color-scale.js`.
+
+### Changed in 1.2.0
+
+- Widget manifest version updated from `1.1.0` to `1.2.0`.
+- Manual mode now keeps values at or below the low threshold in the low color,
+  graduates intermediate values, and pins values at or above the high threshold
+  to the high color.
+- README updated with scale behavior, configuration guidance, and an Asterisk
+  error-counter example.
+
+### Validation for 1.2.0
+
+- Invalid manual ranges are normalized so the high threshold is always greater
+  than the low threshold.
+- Zero and negative values remain visually neutral.
+- Automatic mode preserves the original relative-to-week-maximum behavior.
+
 ## [1.1.0] - 2026-07-16
 
 ### Added in 1.1.0

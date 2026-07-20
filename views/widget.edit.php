@@ -29,6 +29,15 @@
         new CWidgetFieldSelectView($data['fields']['hour_format'])
     )
     ->addField(
+        new CWidgetFieldSelectView($data['fields']['color_scale_mode'])
+    )
+    ->addField(
+        new CWidgetFieldTextBoxView($data['fields']['color_scale_low'])
+    )
+    ->addField(
+        new CWidgetFieldTextBoxView($data['fields']['color_scale_high'])
+    )
+    ->addField(
         new CWidgetFieldCheckBoxView($data['fields']['show_display_title'])
     )
     ->addField(
